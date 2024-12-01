@@ -169,4 +169,13 @@ class OwnersController extends Controller
         Owner::onlyTrashed()->findOrFail($id)->forceDelete();
         return redirect()->route('admin.expired-owners.index');
     }
+    public function expiredOwnerRestore($id)
+    {
+        Owner::onlyTrashed()->findOrFail($id)->restore();
+        return redirect()->route('admin.expired-owners.index')
+            ->with([
+                'message' => 'オーナー情報を復帰しました',
+                'status' => 'info',
+            ]);
+    }
 }

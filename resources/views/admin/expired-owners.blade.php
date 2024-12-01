@@ -18,10 +18,11 @@
                       <table class="table-auto w-full text-left whitespace-no-wrap">
                         <thead>
                           <tr>
-                            <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">名前</th>
-                            <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">メールアドレス</th>
-                            <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">期限が切れた日</th>
-                            <th class="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                            <th class="md:px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">名前</th>
+                            <th class="md:px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">メールアドレス</th>
+                            <th class="md:px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">期限が切れた日</th>
+                            <th class="md:px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
+                            <th class="md:px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -31,6 +32,12 @@
                             <td class="px-4 py-3">{{ $owner->email }}</td>
                             <td class="px-4 py-3">{{ $owner->deleted_at->diffForHumans() }}</td>
 
+                            <form id="restore_{{$owner->id}}" method="POST" action="{{ route('admin.expired-owners.restore', ['owner' => $owner->id]) }}">
+                              @csrf
+                              <td class="md:px-4 text-center">
+                                  <button type="submit" class="text-white bg-purple-400 border-0 py-2 px-4 focus:outline-none hover:bg-purple-500 rounded">復帰</button>
+                              </td>
+                            </form>                          
                             <form id="delete_{{$owner->id}}" method="POST" action="{{ route('admin.expired-owners.destroy',['owner' => $owner->id])}}">
                               @csrf
                               <td class="px-4 text-center">
