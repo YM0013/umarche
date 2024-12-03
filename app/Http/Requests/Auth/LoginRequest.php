@@ -46,12 +46,18 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if ($this->routeIs('owner.*')) {
-            $guard = 'owners';
+            $guard = 'owners'; // ←ここに記載されているものはconfigフォルダのauth.phpファイルのguardsのproviderと一致していないといけない
         } elseif ($this->routeIs('admin.*')) {
             $guard = 'admin';
         } else {
             $guard = 'users';
         }
+
+        //ここで記載されているattempt()はDBに保管されているpasswordとemailを取ってきて照合している
+        //パスワードはハッシュ化されているのでパスワードは自動的にハッシュ化され、データベースの値と比較している
+        //$this->only('email', 'password')はリクエストからemailとpasswordフィールドのみ取得という意味
+        //$this->boolean('remember') 「ログイン状態を保持する」オプション（remember me）を処理している
+        //RateLimiter::clear($this->throttleKey()) 認証成功時、ログイン回数をリセットする動き
 
         if (! Auth::guard($guard)->attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

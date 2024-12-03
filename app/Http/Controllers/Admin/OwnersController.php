@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\DB; //QueryBuilder クエリビルダー
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Throwable;
+use Illuminate\Support\Facades\Log;
+use App\Models\Shop;
 
 class OwnersController extends Controller
 {
@@ -74,14 +77,37 @@ class OwnersController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        Owner::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                $owner = Owner::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                ]);
 
+                Shop::create([
+                    'owner_id' => $owner->id,
+                    'name' => '店名を入力してください',
+                    'information' => '',
+                    'filename' => '',
+                    'is_selling' => true,
+                ]);
+            }, 2);
+        } catch (Throwable $e) {
+            Log::error($e);
+            throw ($e);
+        }
 
-
+        //上の記述例外＋ログlaravel10の機能
+        // Logファサードを利用している
+        // Log::emergency($message);　  緊急事態は発生したとき              システム全体が利用不能など  例：データベースが完全にダウン、外部サービスが完全停止。
+        // Log::alert($message);        すぐに対応が必要な状態              システムは稼働しているが、すぐに解決しなければ大問題になる可能性    例: ディスク容量の急激な低下、APIキーの期限切れ間近。
+        // Log::critical($message);     致命的な問題に対応するログ          システムの重要な部分が動作しないが、システム全体は完全に停止していない  例: 主要なサービスが利用不能、一部のユーザーに重大な影響。
+        // Log::error($message);        実行時のエラーに関するログ          例外やエラーが発生し、アプリケーションの一部が正常に動作しない場合。   例: 無効なユーザー入力によるエラー、ファイルが見つからない。 
+        // Log::warning($message);      潜在的な問題が発生したときのログ    問題が発生する可能性があるが、システムはまだ動作している。  例: 古いバージョンのAPIが使用されている、非推奨機能が呼び出された。
+        // Log::notice($message);       正常な動作中の重要なイベントを記録    問題ではないが、注意を払うべき重要な状況。  例: ユーザーが新しい設定を適用、管理者がログイン。
+        // Log::info($message);         一般的な情報を記録。                システムの状態やイベントに関する情報を記録。    例: ユーザーがログイン、タスクが完了。
+        // Log::debug($message);        デバッグ情報を記録。                システムの動作を詳細に記録し、開発時のデバッグに役立てる。  例: 変数値の追跡、処理フローの確認。
         return redirect()
             ->route('admin.owners.index')
             ->with([
