@@ -1,0 +1,24 @@
+マイグレーションの際に
+SQLSTATE[HY000] [1044] Access denied for user 'ユーザー名'@'%' to database 'データベース名' (SQL: select * from information_schema.tables where table_schema = データベース名 and table_name = migrations and table_type = 'BASE TABLE')
+が出てきた。
+
+解決したときに参考にしたページ
+https://proengineer.internous.co.jp/content/columnfeature/7054
+
+ここを見るとエラー1044は直前に実行した命令に対する権限がないから発生する
+つまり使用するユーザに権限を設定する必要がある
+
+phpMyadminで権限タブをクリックすると
+
+#1030 – Got error 176 “Read page with wrong checksum” from storage engine Aria
+
+というエラーが出てきた
+解決参考サイト
+https://dailyhackon.com/mysql-phpmyadmin-error1030/
+
+手順はDBの「mysql」→表示
+mysqlの左のチェックボックスを選択
+下部に「チェックしたものを：」からテーブルを修復するを選択
+実行
+これで権限付与が可能になった
+
