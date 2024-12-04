@@ -40,3 +40,116 @@ mysqlの左のチェックボックスを選択
 １２  前に作成した権限を削除（念のため紐づいているデータベースも削除しました）
 １３  今まで作成した名前とパスワードで再度作成して紐づける
 １４  無事マイグレーションが出来るようになりました。
+
+
+追記　2024/12/04
+同様の問題が偶然発生し、復帰手順が少なくて済みそう
+1   マイグレーション時にSQLSTATE[HY000] [1044]が発生
+2   phpmyadminの権限タブを開こうとすると#1030 – Got error 176 “Read page with wrong checksum” from storage engine Ariaが表示されるのを確認
+3   データベース名「mysql」をクリック
+4   テーブル名「db」の左のチェックボックスをチェック
+5   下にスクロールし、「チェックしたもの：」をクリック
+6   テーブルメンテナンスの「テーブルを修復する」を選択
+7   「SQLは正常に実行されました。」が表示される
+8   自分が作成したデータベースの権限タブを開く
+9   作成したユーザーを確認し、表示されていなければ権限が外れているということ
+10  phpmyadminのダッシュボードに戻る
+11  ユーザーアカウントタブから作成したユーザーアカウントと作成したデータベースが紐づいていることを確認
+12  権限の編集をクリック
+13　全部のチェックボックスをチェックして実行
+14  laravelのターミナルでマイグレーションを実行
+
+という手順で解決できました
+
+原因を調査するためにchatGPTさんに聞いてみました
+
+表示されるエラー
+  Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000] [1044] Access denied for user 'umarche'@'%' to database 'laravel_umarche' (SQL: select * from information_schema.tables where table_schema = laravel_umarche and table_name = migrations and table_type = 'BASE TABLE')
+
+  at C:\xampp\htdocs\EC\laravel\umarche\vendor\laravel\framework\src\Illuminate\Database\Connection.php:712
+    708▕         // If an exception occurs when attempting to run a query, we'll format the error
+    709▕         // message to include the bindings with SQL, which will make this exception a
+    710▕         // lot more helpful to the developer instead of just the database's errors.
+    711▕         catch (Exception $e) {
+  ➜ 712▕             throw new QueryException(
+    713▕                 $query, $this->prepareBindings($bindings), $e 
+    714▕             );
+    715▕         }
+    716▕     }
+  1   C:\xampp\htdocs\EC\laravel\umarche\vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:70
+      PDOException::("SQLSTATE[HY000] [1044] Access denied for user 'umarche'@'%' to database 'laravel_umarche'")
+
+  2   C:\xampp\htdocs\EC\laravel\umarche\vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:70
+      PDO::__construct("mysql:host=127.0.0.1;port=3306;dbname=laravel_umarche", "umarche", Object(SensitiveParameterValue), [])
+
+
+SQLSTATE[HY000]
+SQLの標準エラーコードで、HY000は「汎用エラー」の事
+
+1044
+MySQLエラーコードで、「アクセスが拒否された (Access denied)」を意味
+指定したユーザー（作成したユーザー）が、特定の操作やデータベースへのアクセス権を持っていない
+
+Access denied for user 'umarche'@'%' to database 'laravel_umarche':
+ユーザー umarche が %（任意のホスト）から laravel_umarche データベースにアクセスしようとしましたが、許可されていません。
+だそうです。
+
+C:\xampp\htdocs\EC\laravel\umarche\vendor\laravel\framework\src\Illuminate\Database\Connection.php:712
+Connection.php は、Laravelのデータベース接続を管理するファイルだそうです
+このファイルの712行目でエラーが発生しています。
+
+throw new QueryException(
+    $query, $this->prepareBindings($bindings), $e
+);
+
+データベースクエリを実行中に例外が発生し、Laravelはこの例外を QueryException として再スローしています。
+QueryException は、Laravelのデータベース操作に特化した例外で、クエリやバインディング情報も含まれています。
+
+ここでは,MySQLから返された「アクセス拒否」エラーをキャッチして処理しています
+
+1   C:\xampp\htdocs\EC\laravel\umarche\vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:70
+    PDOException::("SQLSTATE[HY000] [1044] Access denied for user 'umarche'@'%' to database 'laravel_umarche'")
+
+Connector.php は、Laravelのデータベース接続を作成するためのクラスです。
+70行目で PDO クラスのインスタンス作成が行われており、ここでエラーが発生しています。
+
+return new PDO($dsn, $username, $password, $options);
+$dsn、$username、$password がLaravelの設定 (config/database.php) に基づいて渡されます。
+MySQLから「アクセス拒否」のエラーが返されたため、このインスタンス作成が失敗しています。
+
+なので、ネットで調べると、よくconfig/database.phpに記載されている情報を確認して、編集してみてね
+といった解決方法がヒットします
+ちなみに1045エラー解決にもかぶってくるので余計ヒットします
+
+また、合わせて.envファイルの記述が間違っていないかといった解決案もヒットします。
+今回は初期設定や一度マイグレーションが出来ているのに起きているエラーなので、この解決方法は使えません
+
+そして次にMYSQLの権限を調べるという形になるということです
+
+
+つまり、接続しようとしたけど、作成したユーザーでは権限がないから接続に、失敗しました。
+１. laravelプロジェクト側の設定ファイル（config/database.phpと.env）の設定（記述内容）に間違いがないか確認してください。
+２. 設定しているユーザーのMYSQL側の権限が正しく付与されているか確認してください
+
+と言われているみたいです。
+
+初めてマイグレーションをする場合は１の環境設定ミス（記述ミス）の可能性が高いため設定の確認
+一度マイグレーションが済んでいて、設定は出来ているのに問題が起きた場合は２のMYSQL側の権限が正しく付与されているか確認しましょう。
+
+また、別の角度から見てみるとstorage/logs/laravel.logをみると
+[2024-12-04 13:55:45] 
+local.ERROR: SQLSTATE[HY000] [1044] Access denied for user 'umarche'@'%' to database 'laravel_umarche' 
+(SQL: select * from information_schema.tables where table_schema = laravel_umarche and table_name = migrations and table_type = 'BASE TABLE') 
+{"exception":"[object] (Illuminate\\Database\\QueryException(code: 1044): SQLSTATE[HY000] [1044] Access denied for user 'umarche'@'%' to database 'laravel_umarche' 
+(SQL: select * from information_schema.tables where table_schema = laravel_umarche and table_name = migrations and table_type = 'BASE TABLE') at 
+C:\\xampp\\htdocs\\EC\\laravel\\umarche\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php:712)
+
+(SQL: select * from information_schema.tables where table_schema = laravel_umarche and table_name = migrations and table_type = 'BASE TABLE') 
+これが実行できていないらしい
+これは Laravel のマイグレーションで使用する migrations テーブルの存在を確認するためのクエリです。
+このクエリを実行する権限がユーザー 'umarche'@'%' に与えられていなかったため、エラーになりました。
+
+とlaravel.logには書いてあるみたいです
+
