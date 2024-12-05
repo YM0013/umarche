@@ -13,28 +13,30 @@ class ShopController extends Controller
     {
 
         $this->middleware('auth:owners');
-        
-        $this->middleware(function($request, $next){
+
+        $this->middleware(function ($request, $next) {
             $id = $request->route()->parameter('shop'); //shopのid取得 //文字列
-            if(!is_null($id)) //数字にキャスト
+            if (!is_null($id)) //数字にキャスト
             { // null判定
                 $shopsOwnerId = Shop::findOrFail($id)->owner->id;
                 $shopId = (int)$shopsOwnerId; // キャスト 文字列→数値に型変換
                 $ownerId = Auth::id();
-                if($shopId !== $ownerId)
-                { // 同じでなかったら
+                if ($shopId !== $ownerId) { // 同じでなかったら
                     abort(404); // 404画面表示
                 }
             }
             return $next($request);
-            });
-
+        });
     }
 
     public function index()
     {
-        $ownerId = Auth::id();
-        $shops = Shop::where('owner_id', $ownerId)->get();
+        //２行で書くパターン
+        // $ownerId = Auth::id();
+        // $shops = Shop::where('owner_id', $ownerId)->get();
+
+        //一行で書くパターン
+        $shops = Shop::where('owner_id', Auth::id())->get();
 
         return view(
             'owner.shops.index',
