@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 //リサイズしないパターン用
 use Illuminate\Support\Facades\Storage;
 use InterventionImage;
+use App\Http\Requests\UploadImageRequest;
+use App\Services\ImageService;
 
 class ShopController extends Controller
 {
@@ -56,27 +58,31 @@ class ShopController extends Controller
         return view('owner.shops.edit', compact('shop'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UploadImageRequest $request, $id)
     {
         //リサイズしないパターン（putFileでファイル名生成）
         $imageFile = $request->image; //一時保存　パソコンでいったん保存している
         if (!is_null($imageFile) && $imageFile->isValid()) {
-            //Storage::putFile('public/shops', $imageFile);　リサイズなしの場合、リサイズする場合は方がオブジェクトから画像になるため使えなくなる
-            $fileName = uniqid(rand() . '_');
-            $extension = $imageFile->extension();
-            $fileNameToStore = $fileName . '.' . $extension;
-            $resizedImage = InterventionImage::make($imageFile)
-                ->resize(1920, 1080, function ($constraint) {
-                    $constraint->aspectRatio();
-                })->encode();
-            //
-            Storage::put('public/shops/' . $fileNameToStore, $resizedImage);
+            $fileNameToStore = ImageService::upload($imageFile, 'shops');
         }
-        //Storage::putを使うとストレージ指定、第１引数でファイル名、第２引数で中身となる
-        //きちんとアップロードできているかの判定関数がisValid()
-        //laravelマニュアル→より深く知る→ファイルストレージの中に開設されている
-        //ファイルの保存を確認
+
 
         return redirect()->route('owner.shops.index');
     }
+
+    //Storage::putを使うとストレージ指定、第１引数でファイル名、第２引数で中身となる
+    //きちんとアップロードできているかの判定関数がisValid()
+    //laravelマニュアル→より深く知る→ファイルストレージの中に開設されている
+    //ファイルの保存を確認
+
+    //Storage::putFile('public/shops', $imageFile);　リサイズなしの場合、リサイズする場合は方がオブジェクトから画像になるため使えなくなる
+    // $fileName = uniqid(rand() . '_');
+    // $extension = $imageFile->extension();
+    // $fileNameToStore = $fileName . '.' . $extension;
+    // $resizedImage = InterventionImage::make($imageFile)
+    //     ->resize(1920, 1080, function ($constraint) {
+    //         $constraint->aspectRatio();
+    //     })->encode();
+    //
+    //Storage::put('public/shops/' . $fileNameToStore, $resizedImage);
 }
