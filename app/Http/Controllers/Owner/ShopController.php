@@ -86,7 +86,7 @@ class ShopController extends Controller
             ->with([
                 'message' => '店舗情報を更新しました',
                 'status' => 'info'
-            ]);;
+            ]);
     }
 
     //Storage::putを使うとストレージ指定、第１引数でファイル名、第２引数で中身となる

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\image;
+use App\Models\Image;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UploadImageRequest;
+use App\Services\ImageService;
 
 class imageController extends Controller
 {
@@ -34,7 +36,7 @@ class imageController extends Controller
     }
     public function index()
     {
-        $images = image::where('owner_id', Auth::id())
+        $images = Image::where('owner_id', Auth::id())
             ->orderBy('updated_at', 'desc')
             ->paginate(20);
 
@@ -51,7 +53,7 @@ class imageController extends Controller
      */
     public function create()
     {
-        //
+        return view('owner.images.create');
     }
 
     /**
@@ -60,9 +62,25 @@ class imageController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(UploadImageRequest $request)
     {
-        //
+        $imageFiles = $request->file('files');
+        if (!is_null($imageFiles)) {
+            foreach ($imageFiles as $imageFile) {
+                $fileNameToStore = ImageService::upload($imageFile, 'products');
+                Image::Create([
+                    'owner_id' => Auth::id(),
+                    'filename' => $fileNameToStore
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('owner.shops.index')
+            ->with([
+                'message' => '画像登録を実施しました',
+                'status' => 'info'
+            ]);;
     }
 
     /**
@@ -94,10 +112,7 @@ class imageController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        //
-    }
+    public function update(Request $request, $id) {}
 
     /**
      * Remove the specified resource from storage.
