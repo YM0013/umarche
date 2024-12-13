@@ -26,7 +26,9 @@
                                             「laravelドキュメント->Eloquent ORM->リレーション->Eagerロード」に書いてある
                                             書き方は$books = Book::with('author')->get();とする
                                             ちなみにこれにおいてのリレーションは「->」ではなく「.」で繋げる　--}}    
-                                            {{--<div class="text-gray-700">{{$product->name}}</div>--}}
+                                            {{--<div class="text-gray-700">{{$product->name}}</div>
+                                            適応するとselect * from `images` where `images`.`id` in (1, 2, 3, 4)
+                                            このようにまとまる--}}
                                         </div>
                                     </a>
                                 </div>
