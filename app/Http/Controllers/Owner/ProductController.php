@@ -14,6 +14,7 @@ use App\Models\Stock;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\ProductRequest;
 
 class ProductController extends Controller
 {
@@ -91,23 +92,10 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
         // dd($request);
-        $request->validate([
-            'name' => ['required', 'string', 'max:50'],
-            'information' => ['required', 'string', 'max:1000',],
-            'price' => ['required', 'integer',],
-            'sort_order' => ['nullable', 'integer',],
-            'quantity' => ['required', 'integer',],
-            'shop_id' => ['required', 'exists:shops,id',],
-            'category' => ['required', 'exists:secondary_categories,id',],
-            'image1' => ['nullable', 'exists:images,id',],
-            'image2' => ['nullable', 'exists:images,id',],
-            'image3' => ['nullable', 'exists:images,id',],
-            'image4' => ['nullable', 'exists:images,id',],
-            'is_selling' => ['required'],
-        ]);
+
 
         try {
             DB::transaction(function () use ($request) {
@@ -145,17 +133,6 @@ class ProductController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
@@ -163,19 +140,33 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        //
+        $product = Product::findOrFail($id); //一つの商品のデータを取ることが出来る
+        $quantity = Stock::where('product_id', $product->id)
+            ->sum('quantity'); //一つの商品の在庫を取ることになるのでStockになっている
+
+        $shops = Shop::where('owner_id', Auth::id())
+            ->select('id', 'name')
+            ->get();
+
+        $images = Image::where('owner_id', Auth::id())
+            ->select('id', 'title', 'filename')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $categories = PrimaryCategory::with('secondary')
+            ->get();
+
+        return view(
+            'owner.products.edit',
+            compact('product', 'quantity', 'shops', 'images', 'categories')
+        );
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    public function update(ProductRequest $request, $id)
     {
-        //
+        $request->validate([
+            'current_quantity' => ['required', 'integer',],
+        ]);
     }
 
     /**
