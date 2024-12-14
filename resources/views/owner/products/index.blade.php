@@ -19,7 +19,8 @@
                                 <div class = "w-1/4 p-2 md:p-4">
                                     <a href = "{{route('owner.products.edit',['product'=> $product->id])}}">
                                         <div class="border rounded-md p-2 md:p-4">
-                                            <x-thumbnail :filename="$product->imageFirst->filename" type="products" />
+                                            <x-thumbnail filename="{{ $product->imageFirst->filename ?? ''}}" type="products" />
+                                                <div class="text-gray-700">{{ $product->name }}</div>
                                             {{--$product->imageFirst->filenameはこのままでは、画像に対して1つずつSQL文が発行されるので
                                             画像が増えれば増えるほど、処理が重くなってしまう。通称N＋１問題
                                             対策するにはlaravelだとEagerLoading処理が必要公式ドキュメントは
