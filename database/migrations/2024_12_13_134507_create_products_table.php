@@ -15,6 +15,11 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->text('information');
+            $table->unsignedInteger('price');
+            $table->boolean('is_selling');
+            $table->integer('sort_order')->nullable();
             $table->foreignID('shop_id')
                 ->constrained()
                 ->onUpdate('cascade')
@@ -22,6 +27,15 @@ class CreateProductsTable extends Migration
             $table->foreignID('secondary_category_id')
                 ->constrained();
             $table->foreignID('image1')
+                ->nullable()
+                ->constrained('images');
+            $table->foreignID('image2')
+                ->nullable()
+                ->constrained('images');
+            $table->foreignID('image3')
+                ->nullable()
+                ->constrained('images');
+            $table->foreignID('image4')
                 ->nullable()
                 ->constrained('images');
             $table->timestamps();
