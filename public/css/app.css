@@ -851,6 +851,9 @@ select{
 .-mt-px{
   margin-top: -1px;
 }
+.mb-1{
+  margin-bottom: 0.25rem;
+}
 .mb-12{
   margin-bottom: 3rem;
 }
@@ -898,9 +901,6 @@ select{
 }
 .mt-8{
   margin-top: 2rem;
-}
-.mb-1{
-  margin-bottom: 0.25rem;
 }
 .block{
   display: block;
