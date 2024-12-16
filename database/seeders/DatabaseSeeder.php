@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\image;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
+use App\Models\Stock;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,5 +26,9 @@ class DatabaseSeeder extends Seeder
             //StockSeeder::class,
             UserSeeder::class,
         ]);
+        //外部キー制約の都合でShopやImageが作られないとプロダクトを一緒に作ってしまうとエラーが出てしまうので
+        //callの後に記載する必要あり
+        Product::factory(100)->create();
+        Stock::factory(100)->create();
     }
 }
