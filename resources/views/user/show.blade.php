@@ -66,6 +66,8 @@
                         <div>
                           <span class="title-font font-medium text-2xl text-gray-900">{{ number_format($product->price) }}</span><span class="text-sm text-gray-700">円(税込)</span>
                         </div>
+                        <form method="post" action="{{ route('user.cart.add') }}">
+                          @csrf
                           <div class="flex items-center"> 
                             <span class="mr-3">数量</span>
                             <div class="relative">
@@ -76,7 +78,9 @@
                               </select>
                             </div>
                           </div>
-                      <button class="flex  text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">カートに入れる</button>
+                          <button class="flex  text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">カートに入れる</button>
+                          <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        </form>
                     </div>
                  </div>
                 <div class="border-t border-gray-400 my-8"></div>
@@ -96,7 +100,7 @@
           </div>
       </div>
   </div>
-  <div class="modal micromodal-slide" id="modal-1" aria-hidden="true">
+  <div class="modal micromodal-slide " id="modal-1" aria-hidden="true">
     <div class="modal__overlay" tabindex="-1" data-micromodal-close>
       <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-1-title">
         <header class="modal__header">
