@@ -76,13 +76,20 @@ class CartController extends Controller
                 if ($product->pivot->quantity > $quantity) { //$product->pivot->quantityでカートの中の商品の数量を、$quantityで在庫の数量を取得している
                     return redirect()->view('user.cart.index'); //商品はカートの中に複数あったとしても、１つでも在庫が足りない場合はカートに戻すようにする。
                 } else {
-                    $lineItem = [
-                        'name' => $product->name,
-                        'description' => $product->information,
-                        'amount' => $product->price,
+                    $price_data = ([
+                        'unit_amount' => $product->price,
                         'currency' => 'jpy',
+                        'product_data' => $price_data = ([
+                            'name' => $product->name,
+                            'description' => $product->information,
+                        ]),
+                    ]);
+
+                    $lineItem = [
+                        'price_data' => $price_data,
                         'quantity' => $product->pivot->quantity,
                     ];
+
                     array_push($lineItems, $lineItem);
                     //array_push()で配列の最後に要素を追加する
                     //ここでは$lineItemsに$lineItemを追加している
@@ -100,7 +107,7 @@ class CartController extends Controller
                 ]);
             }
 
-            dd('test');
+            //dd('test');
 
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
 
@@ -113,12 +120,13 @@ class CartController extends Controller
             ]);
             //viewにreturnで渡す前に公開鍵も合わせて渡す必要がある
             //つまり公開鍵と秘密鍵が一緒になっているので決済が出来るという事になる
-            $publickey = env('STRIPE_PUBLIC_KEY');
+            $publicKey = env('STRIPE_PUBLIC_KEY');
 
             return view(
                 'user.checkout',
-                compact('session', 'publickey')
+                compact('session', 'publicKey')
             );
+
             //sessionには商品情報なども全て入っていることになる
         }
     }
