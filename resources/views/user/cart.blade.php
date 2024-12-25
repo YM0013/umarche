@@ -9,7 +9,7 @@
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
               <div class="p-6 bg-white border-b border-gray-200">
-                  @if (count($products) > 0)
+                  @if (count($products) > 0){{-- count()は配列やオブジェクトの要素数を数えるために使うものなので、ここでは --}}
                     @foreach ($products as $product )
                     <div class="md:flex md:items-center mb-2">
                       <div class="md:w-3/12">

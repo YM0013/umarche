@@ -26,9 +26,10 @@ class ItemController extends Controller
             ->having('quantity', '>=', 1);
         //Having・・groupByの後に条件指定
         //Where・・groupByより前に条件指定
-        $products = DB::table('products')
+        //groupBy('product_id')でproduct_idでグループ化して、sum()でquantityを合計している
+        $products = DB::table('products')                           //joinSub()でサブクエリを使うことができる、第１引数にサブクエリを指定し、第２引数にサブクエリの別名を指定、第３引数にクロージャを指定、クロージャとはサブクエリの結果を使ってメインクエリの結果を取得するための処理
             ->joinSub($stocks, 'stock', function ($join) {          //上の$stocksで作った値を変数としてstockという名前に変換し
-                $join->on('products.id', '=', 'stock.product_id');   //function($join)としてproduct.idテーブルとstock.product_idテーブルがくっつけています
+                $join->on('products.id', '=', 'stock.product_id');  //function($join)としてproduct.idテーブルとstock.product_idテーブルがくっつけています
             })                                                      //またshopsテーブルもくっつけないといけないので
             ->join('shops', 'products.shop_id', '=', 'shops.id')    //shopsという名前でproducts.shop_idテーブルとshops.idテーブルをくっつけています
             ->join(
