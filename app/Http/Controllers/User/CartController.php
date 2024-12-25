@@ -8,6 +8,7 @@ use App\Models\Cart;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Arr;
+use App\Models\Stock;
 
 class CartController extends Controller
 {
@@ -69,19 +70,38 @@ class CartController extends Controller
         foreach ($products as $product) {
             $lineItems = []; //StripeのAPIに渡すための配列を作成,ちなみにStripeで商品はlineItemsという名前で使われている
             foreach ($products as $product) {
-                $lineItem = [
-                    'name' => $product->name,
-                    'description' => $product->information,
-                    'amount' => $product->price,
-                    'currency' => 'jpy',
-                    'quantity' => $product->pivot->quantity,
-                ];
-                array_push($lineItems, $lineItem);
-                //array_push()で配列の最後に要素を追加する
-                //ここでは$lineItemsに$lineItemを追加している
-                //array_push()は第1引数に追加したい配列、第2引数に追加したい要素を指定する
+                $quantity = '';
+                $quantity = Stock::where('product_id', $product->id)->sum('quantity');
+
+                if ($product->pivot->quantity > $quantity) { //$product->pivot->quantityでカートの中の商品の数量を、$quantityで在庫の数量を取得している
+                    return redirect()->view('user.cart.index'); //商品はカートの中に複数あったとしても、１つでも在庫が足りない場合はカートに戻すようにする。
+                } else {
+                    $lineItem = [
+                        'name' => $product->name,
+                        'description' => $product->information,
+                        'amount' => $product->price,
+                        'currency' => 'jpy',
+                        'quantity' => $product->pivot->quantity,
+                    ];
+                    array_push($lineItems, $lineItem);
+                    //array_push()で配列の最後に要素を追加する
+                    //ここでは$lineItemsに$lineItemを追加している
+                    //array_push()は第1引数に追加したい配列、第2引数に追加したい要素を指定する
+                }
             }
             //dd($lineItems);
+
+            //在庫チェックが終わったので、Stripeに渡す前に在庫を減らす処理を書く
+            foreach ($products as $product) {
+                Stock::create([
+                    'product_id' => $product->id,
+                    'type' => \Constant::PRODUCT_LIST['reduce'], //ownerのProductControllerで定義したPRODUCT_LISTのreduceを指定
+                    'quantity' => $product->pivot->quantity * -1, //カートの中の在庫数を取りたいので、$product->pivot->quantityを指定　在庫を現状させるので-1をかける
+                ]);
+            }
+
+            dd('test');
+
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
 
             $session = \Stripe\Checkout\Session::create([
