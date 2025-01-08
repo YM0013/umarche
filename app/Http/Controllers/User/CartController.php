@@ -116,7 +116,7 @@ class CartController extends Controller
                 'line_items' => [$lineItems],               //上記で作成したlineItemsの配列がforeachで回っているので、その配列をそのまま渡している
                 'mode' => 'payment',                        //支払いのモードを指定(１回支払いの場合)（サブスクリプションはまた別）
                 'success_url' => route('user.cart.success'), //支払いが成功した場合アイテム一覧にリダイレクトがかかる
-                'cancel_url' => route('user.cart.index'),   //支払いがキャンセルされた場合カートにリダイレクトがかかる
+                'cancel_url' => route('user.cart.cancel'),   //支払いがキャンセルされた場合カートにリダイレクトがかかる
             ]);
             //viewにreturnで渡す前に公開鍵も合わせて渡す必要がある
             //つまり公開鍵と秘密鍵が一緒になっているので決済が出来るという事になる
@@ -136,5 +136,21 @@ class CartController extends Controller
         Cart::where('user_id', Auth::id())->delete(); //支払いが成功した場合カートの中身を削除する
 
         return redirect()->route('user.items.index');
+    }
+
+    public function cancel()
+    {
+        $user = User::findOrFail(Auth::id());
+
+        foreach ($user->products as $product) //カートの商品をキャンセルした場合、在庫を戻す処理
+        {
+            Stock::create([
+                'product_id' => $product->id,
+                'type' => \Constant::PRODUCT_LIST['add'],
+                'quantity' => $product->pivot->quantity,
+            ]);
+        }
+
+        return redirect()->route('user.cart.index');
     }
 }
