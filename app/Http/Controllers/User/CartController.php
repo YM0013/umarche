@@ -73,7 +73,7 @@ class CartController extends Controller
                 $quantity = '';
                 $quantity = Stock::where('product_id', $product->id)->sum('quantity');
 
-                if ($product->pivot->quantity > $quantity) { //$product->pivot->quantityでカートの中の商品の数量を、$quantityで在庫の数量を取得している
+                if ($product->pivot->quantity > $quantity) { //$product->pivot->quantityでカートの中の商品の数量を、$quantityでstockテーブルよりも多いかどうか比較している
                     return redirect()->view('user.cart.index'); //商品はカートの中に複数あったとしても、１つでも在庫が足りない場合はカートに戻すようにする。
                 } else {
                     $price_data = ([
@@ -115,7 +115,7 @@ class CartController extends Controller
                 'payment_method_types' => ['card'],
                 'line_items' => [$lineItems],               //上記で作成したlineItemsの配列がforeachで回っているので、その配列をそのまま渡している
                 'mode' => 'payment',                        //支払いのモードを指定(１回支払いの場合)（サブスクリプションはまた別）
-                'success_url' => route('user.items.index'), //支払いが成功した場合アイテム一覧にリダイレクトがかかる
+                'success_url' => route('user.cart.success'), //支払いが成功した場合アイテム一覧にリダイレクトがかかる
                 'cancel_url' => route('user.cart.index'),   //支払いがキャンセルされた場合カートにリダイレクトがかかる
             ]);
             //viewにreturnで渡す前に公開鍵も合わせて渡す必要がある
@@ -129,5 +129,12 @@ class CartController extends Controller
 
             //sessionには商品情報なども全て入っていることになる
         }
+    }
+
+    public function success()
+    {
+        Cart::where('user_id', Auth::id())->delete(); //支払いが成功した場合カートの中身を削除する
+
+        return redirect()->route('user.items.index');
     }
 }
