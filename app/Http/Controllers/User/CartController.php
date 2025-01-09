@@ -77,7 +77,7 @@ class CartController extends Controller
                     return redirect()->view('user.cart.index'); //商品はカートの中に複数あったとしても、１つでも在庫が足りない場合はカートに戻すようにする。
                 } else {
                     $price_data = ([
-                        'unit_amount' => $product->price,
+                        'unit_amount' => $product->price, //unit_amountはstripeで指定された金額設定のキー,$product->priceで商品の値段を取得している
                         'currency' => 'jpy',
                         'product_data' => $price_data = ([
                             'name' => $product->name,

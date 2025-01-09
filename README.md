@@ -1,5 +1,3 @@
-## udemy Laravel 講座
-
 ## ダウンロード方法
 
 git clone
