@@ -5,7 +5,7 @@
 git clone
 git clone https://github.com/YM0013/umarche.git
 
-git clone 　ブランチを指定してダウンロードする場合
+git clone ブランチを指定してダウンロードする場合
 git clone -b ブランチ名 https://github.com/YM0013/umarche.git
 
 もしくは zip ファイルでダウンロードしてください

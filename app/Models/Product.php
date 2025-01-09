@@ -9,6 +9,7 @@ use App\Models\SecondaryCategory;
 use App\Models\image;
 use App\Models\Stock;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -76,5 +77,45 @@ class Product extends Model
     {
         return $this->belongsToMany(Product::class, 'carts')
             ->withPivot(['id', 'quantity']);
+    }
+
+    public function scopeAvailableItems($query)
+    {
+        $stocks = DB::table('t_stocks')
+            ->select(
+                'product_id',
+                DB::raw('sum(quantity) as quantity') //raw()で()の中でSQL文を直接書くことが出来る
+            )
+            ->groupBy('product_id')
+            ->having('quantity', '>=', 1);
+        //Having・・groupByの後に条件指定
+        //Where・・groupByより前に条件指定
+        //groupBy('product_id')でproduct_idでグループ化して、sum()でquantityを合計している
+
+        return $query
+            ->joinSub($stocks, 'stock', function ($join) {          //上の$stocksで作った値を変数としてstockという名前に変換し
+                $join->on('products.id', '=', 'stock.product_id');  //function($join)としてproduct.idテーブルとstock.product_idテーブルがくっつけています
+            })                                                      //またshopsテーブルもくっつけないといけないので
+            ->join('shops', 'products.shop_id', '=', 'shops.id')    //shopsという名前でproducts.shop_idテーブルとshops.idテーブルをくっつけています
+            ->join(
+                'secondary_categories',
+                'products.secondary_category_id',
+                '=',
+                'secondary_categories.id'
+            )
+            ->join('images as image1', 'products.image1', '=', 'image1.id')
+            ->where('shops.is_selling', true)                                   //これで確認したいテーブルが全てくっついたので、shops.is_sellingがtrueかつ
+            ->where('products.is_selling', true)                                //products.is_sellingがtrueのテーブルのみ取得することが出来る
+            ->select(
+                'products.id as id',                                            //〇〇as△△を使うことで〇〇はテーブル名の△△を指定するという使い方ができる
+                'products.name as name',
+                'products.price',
+                'products.sort_order as sort_order',
+                'products.information',
+                'secondary_categories.name as category',
+                'image1.filename as filename'
+            );
+        // dd($stocks, $products);
+        // $products = Product::all();
     }
 }
