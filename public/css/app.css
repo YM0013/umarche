@@ -903,6 +903,9 @@ select{
 .mr-3{
   margin-right: 0.75rem;
 }
+.mr-4{
+  margin-right: 1rem;
+}
 .mt-1{
   margin-top: 0.25rem;
 }
@@ -923,9 +926,6 @@ select{
 }
 .mt-8{
   margin-top: 2rem;
-}
-.mr-4{
-  margin-right: 1rem;
 }
 .block{
   display: block;

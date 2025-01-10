@@ -84,7 +84,7 @@ class Product extends Model
         $stocks = DB::table('t_stocks')
             ->select(
                 'product_id',
-                DB::raw('sum(quantity) as quantity') //raw()で()の中でSQL文を直接書くことが出来る
+                DB::raw('sum(quantity) as quantity') //raw()で()の中でSQL文を直接書くことが出来る asでquantityという名前をつけている
             )
             ->groupBy('product_id')
             ->having('quantity', '>=', 1);
