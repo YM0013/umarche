@@ -83,7 +83,10 @@
                           </div>
                       @endforeach
                 </div>
-                {{$products->links()}}
+                {{$products->appends([
+                    'sort' => \Request::get('sort'),
+                    'pagination' => \Request::get('pagination')
+                ])->links()}}
               </div>
           </div>
       </div>
