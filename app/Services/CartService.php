@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\Cart;
+use App\Jobs\SendThanksMail;
 
 class CartService
 {
@@ -29,7 +30,7 @@ class CartService
       $result = array_merge($product[0], $ownerInfo, $quantity[0]);
       array_push($products, $result);
     }
-    dd($products);
+    //dd($products);
     return $products; //新しい配列を返す
   }
 }

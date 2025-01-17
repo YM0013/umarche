@@ -41,7 +41,8 @@ class ItemController extends Controller
 
         //非同期的に送信
         //dispatchでジョブをキューの中に入れるという処理
-        SendThanksMail::dispatch();
+        //SendThanksMail::dispatch();
+
 
         $categories = PrimaryCategory::with('secondary')
             ->get();

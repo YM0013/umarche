@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use App\Models\Stock;
+use App\Jobs\SendThanksMail;
 use App\Services\CartService;
 
 class CartController extends Controller
@@ -68,6 +69,10 @@ class CartController extends Controller
         /////
         $items = Cart::where('user_id', Auth::id())->get();
         $products = CartService::getItemsInCart($items);
+        $user = User::findOrFail(Auth::id());
+
+        SendThanksMail::dispatch($products, $user);
+        dd('ユーザーメール送信テスト');
         /////
         $user = User::findOrFail(Auth::id());
         $products = $user->products;
@@ -83,14 +88,14 @@ class CartController extends Controller
                 } else {
                     $price_data = ([
                         'unit_amount' => $product->price, //unit_amountはstripeで指定された金額設定のキー,$product->priceで商品の値段を取得している
-                        'currency' => 'jpy',
-                        'product_data' => $price_data = ([
-                            'name' => $product->name,
-                            'description' => $product->information,
+                        'currency' => 'jpy', //通貨を指定 jpyは日本円 
+                        'product_data' => $price_data = ([ //product_dataは商品情報を指定するキー
+                            'name' => $product->name, //ここのproduct->nameは商品の名前を取得している
+                            'description' => $product->information, //descriptionで商品の説明を取得している
                         ]),
                     ]);
 
-                    $lineItem = [
+                    $lineItem = [ //lineItemはstripeの
                         'price_data' => $price_data,
                         'quantity' => $product->pivot->quantity,
                     ];
